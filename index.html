@@ -33,8 +33,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 .cal-nav button{background:none;border:none;color:var(--accent);font-size:20px;cursor:pointer;padding:8px 12px}
 .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:4px;padding:0 4px}
 .cal-weekdays span{font-size:11px;color:var(--sub);font-weight:600}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:20px;padding:0 4px}
-.cal-day{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;position:relative;font-size:13px;transition:all .15s;height:52px;width:100%}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:48px;gap:2px;margin-bottom:20px;padding:0 4px}
+.cal-day{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;position:relative;font-size:13px;transition:all .15s;width:100%;height:100%}
 .cal-day .lunar{font-size:8px;color:var(--sub);margin-top:1px;white-space:nowrap}
 .cal-day.selected .lunar{color:rgba(0,0,0,0.6)}
 .cal-day:hover{background:var(--card)}
