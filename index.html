@@ -40,8 +40,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 .cal-day.selected .lunar{color:rgba(0,0,0,0.6)}
 .cal-day:hover{background:var(--card)}
 .cal-day.today{color:var(--accent);font-weight:700}
+.cal-day.today::before{content:'';position:absolute;inset:2px;border:1.5px solid var(--accent);border-radius:10px;opacity:0.4}
 .cal-day.selected{background:var(--accent);color:#000;font-weight:700}
+.cal-day.selected::before{display:none}
+.cal-day.has-event{background:var(--card2)}
+.cal-day.has-event .cal-num{font-weight:700}
 .cal-day.empty{pointer-events:none}
+.btn-today{position:fixed;bottom:90px;right:16px;width:40px;height:40px;border-radius:50%;background:var(--accent);color:#000;border:none;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(201,168,76,0.4);z-index:99;display:flex;align-items:center;justify-content:center}
 .cal-dots{display:flex;gap:2px;position:absolute;bottom:2px;left:50%;transform:translateX(-50%)}
 .cal-dots .dot{width:4px;height:4px;border-radius:50%}
 .cal-dots .dot.day-dot{background:var(--danger)}
@@ -113,6 +118,7 @@ textarea.form-input{resize:none;height:80px}
 <div class="cal-weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
 <div class="cal-grid" id="cal-grid"></div>
 <div class="day-events" id="day-events"></div>
+<button class="btn-today" onclick="goToday()">今</button>
 </div>
 
 <!-- 任务页 -->
@@ -198,6 +204,7 @@ let calYear,calMonth,selectedDate;
 (function initCal(){const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();selectedDate=now.toISOString().slice(0,10)})();
 
 function changeMonth(delta){calMonth+=delta;if(calMonth>11){calMonth=0;calYear++}if(calMonth<0){calMonth=11;calYear--}renderCalendar()}
+function goToday(){const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();selectedDate=now.toISOString().slice(0,10);renderCalendar()}
 
 function renderCalendar(){
   document.getElementById('cal-month-title').textContent=`${calYear}年${calMonth+1}月`;
@@ -215,7 +222,7 @@ function renderCalendar(){
     const isSel=dateStr===selectedDate;
     const hasDays=days.some(x=>x.date===dateStr);
     const hasTasks=tasks.some(x=>x.dueDate&&x.dueDate.slice(0,10)===dateStr);
-    let cls='cal-day';if(isToday)cls+=' today';if(isSel)cls+=' selected';
+    let cls='cal-day';if(isToday)cls+=' today';if(isSel)cls+=' selected';if(hasDays||hasTasks)cls+=' has-event';
     let dots='';if(hasDays||hasTasks){dots='<div class="cal-dots">';if(hasDays)dots+='<div class="dot day-dot"></div>';if(hasTasks)dots+='<div class="dot task-dot"></div>';dots+='</div>'}
     const lunarText=(typeof LUNAR!=='undefined'&&LUNAR[dateStr])?LUNAR[dateStr]:'';
     grid.innerHTML+=`<div class="${cls}" onclick="selectDate('${dateStr}')"><span class="cal-num">${d}</span><span class="lunar">${lunarText}</span>${dots}</div>`;
@@ -334,9 +341,9 @@ function showSaveSuccess(){
 
 // ─── 预置生日数据（2026-2030每年，农历已转公历） ───
 (function initPresetData(){
-  if(localStorage.getItem('_presetLoaded_v4'))return;
-  const existing=DB.days();
-  if(existing.length>0){localStorage.setItem('_presetLoaded_v4','1');return;}
+  if(localStorage.getItem('_presetLoaded_v5'))return;
+  // 强制刷新数据
+  DB.set('importantDays',[]);
 
   // 多年生日数据（农历已按年转换公历）
   const BIRTHDAYS=[{"title":"LG生日","date":"2026-03-29","category":"生活","note":"农历二月十一"},{"title":"BOBO生日","date":"2026-05-31","category":"生活","note":"农历四月十五"},{"title":"MM生日","date":"2026-08-11","category":"家庭","note":"农历六月廿九"},{"title":"刘玉琴生日","date":"2026-12-06","category":"生活","note":"农历十月廿八"},{"title":"李莎妮生日","date":"2026-12-09","category":"生活","note":"农历冬月初一"},{"title":"华生日","date":"2026-12-20","category":"家庭","note":"农历冬月十二"},{"title":"DD生日","date":"2027-01-10","category":"家庭","note":"农历腊月初三"},{"title":"F生日","date":"2027-01-11","category":"家庭","note":"农历腊月初四"},{"title":"隋佳欣生日","date":"2026-03-13","category":"生活","note":"公历3月13日"},{"title":"HuaGary生日","date":"2026-05-15","category":"生活","note":"公历5月15日"},{"title":"LG生日","date":"2027-03-18","category":"生活","note":"农历二月十一"},{"title":"BOBO生日","date":"2027-05-20","category":"生活","note":"农历四月十五"},{"title":"MM生日","date":"2027-08-01","category":"家庭","note":"农历六月廿九"},{"title":"刘玉琴生日","date":"2027-11-26","category":"生活","note":"农历十月廿八"},{"title":"李莎妮生日","date":"2027-11-29","category":"生活","note":"农历冬月初一"},{"title":"华生日","date":"2027-12-10","category":"家庭","note":"农历冬月十二"},{"title":"DD生日","date":"2027-12-31","category":"家庭","note":"农历腊月初三"},{"title":"F生日","date":"2028-01-01","category":"家庭","note":"农历腊月初四"},{"title":"隋佳欣生日","date":"2027-03-13","category":"生活","note":"公历3月13日"},{"title":"HuaGary生日","date":"2027-05-15","category":"生活","note":"公历5月15日"},{"title":"LG生日","date":"2028-03-07","category":"生活","note":"农历二月十一"},{"title":"BOBO生日","date":"2028-05-08","category":"生活","note":"农历四月十五"},{"title":"MM生日","date":"2028-08-18","category":"家庭","note":"农历六月廿九"},{"title":"刘玉琴生日","date":"2028-11-14","category":"生活","note":"农历十月廿八"},{"title":"李莎妮生日","date":"2028-11-17","category":"生活","note":"农历冬月初一"},{"title":"华生日","date":"2028-11-28","category":"家庭","note":"农历冬月十二"},{"title":"DD生日","date":"2028-12-19","category":"家庭","note":"农历腊月初三"},{"title":"F生日","date":"2028-12-20","category":"家庭","note":"农历腊月初四"},{"title":"隋佳欣生日","date":"2028-03-13","category":"生活","note":"公历3月13日"},{"title":"HuaGary生日","date":"2028-05-15","category":"生活","note":"公历5月15日"},{"title":"LG生日","date":"2029-03-25","category":"生活","note":"农历二月十一"},{"title":"BOBO生日","date":"2029-05-27","category":"生活","note":"农历四月十五"},{"title":"MM生日","date":"2029-08-07","category":"家庭","note":"农历六月廿九"},{"title":"刘玉琴生日","date":"2029-12-03","category":"生活","note":"农历十月廿八"},{"title":"李莎妮生日","date":"2029-12-06","category":"生活","note":"农历冬月初一"},{"title":"华生日","date":"2029-12-17","category":"家庭","note":"农历冬月十二"},{"title":"DD生日","date":"2030-01-07","category":"家庭","note":"农历腊月初三"},{"title":"F生日","date":"2030-01-08","category":"家庭","note":"农历腊月初四"},{"title":"隋佳欣生日","date":"2029-03-13","category":"生活","note":"公历3月13日"},{"title":"HuaGary生日","date":"2029-05-15","category":"生活","note":"公历5月15日"},{"title":"LG生日","date":"2030-03-14","category":"生活","note":"农历二月十一"},{"title":"BOBO生日","date":"2030-05-16","category":"生活","note":"农历四月十五"},{"title":"MM生日","date":"2030-07-28","category":"家庭","note":"农历六月廿九"},{"title":"刘玉琴生日","date":"2030-11-22","category":"生活","note":"农历十月廿八"},{"title":"李莎妮生日","date":"2030-11-25","category":"生活","note":"农历冬月初一"},{"title":"华生日","date":"2030-12-06","category":"家庭","note":"农历冬月十二"},{"title":"DD生日","date":"2030-12-27","category":"家庭","note":"农历腊月初三"},{"title":"F生日","date":"2030-12-28","category":"家庭","note":"农历腊月初四"},{"title":"隋佳欣生日","date":"2030-03-13","category":"生活","note":"公历3月13日"},{"title":"HuaGary生日","date":"2030-05-15","category":"生活","note":"公历5月15日"}];
@@ -354,7 +361,7 @@ function showSaveSuccess(){
       }
     });
   });
-  localStorage.setItem('_presetLoaded_v4','1');
+  localStorage.setItem('_presetLoaded_v5','1');
 })();
 
 // ─── 初始化 ───
