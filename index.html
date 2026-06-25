@@ -326,43 +326,41 @@ function showSaveSuccess(){
 
 // ─── 预置数据（首次加载写入） ───
 (function initPresetData(){
-  if(localStorage.getItem('_presetLoaded_v2'))return;
+  if(localStorage.getItem('_presetLoaded_v3'))return;
+  // 清除旧版预置数据
+  localStorage.removeItem('_presetLoaded_v2');
+  const existing=DB.days();
+  if(existing.length>0){localStorage.setItem('_presetLoaded_v3','1');return;}
+
   const presetDays=[
-    {title:"隋佳欣生日",date:"2026-03-13",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:""},
-    {title:"LG生日",date:"2026-03-21",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:"二月十一"},
-    {title:"HuaGary生日",date:"2026-05-15",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:""},
-    {title:"BOBO生日",date:"2026-05-23",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:"四月十五"},
-    {title:"王颖生日",date:"2026-06-04",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:""},
-    {title:"阿莲生日",date:"2026-06-20",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:""},
-    {title:"S生日",date:"2026-07-30",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:""},
-    {title:"钱磊生日",date:"2026-08-02",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:""},
-    {title:"MM生日",date:"2026-08-12",category:"家庭",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:"六月廿九"},
-    {title:"生日管家生日",date:"2026-10-06",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:""},
-    {title:"李刘倩生日",date:"2026-10-30",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:""},
-    {title:"樊家陵生日",date:"2026-11-17",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:""},
-    {title:"刘玉琴生日",date:"2026-11-28",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:"十月廿八"},
-    {title:"李莎妮生日",date:"2026-12-01",category:"生活",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:"冬月初一"},
-    {title:"华生日",date:"2026-12-12",category:"家庭",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:"冬月十二"},
-    {title:"DD生日",date:"2027-01-03",category:"家庭",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:"腊月初三"},
-    {title:"F生日",date:"2027-01-04",category:"家庭",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:"腊月初四"},
-    {title:"Yukin加入小米15周年",date:"2026-11-15",category:"纪念日",reminderOffset:"oneWeekBefore",repeatCycle:"每年",note:"2011年11月15日加入"}
+    {title:"隋佳欣生日",date:"2026-03-13",category:"生活",repeatCycle:"每年",note:"公历3月13日"},
+    {title:"LG生日",date:"2026-03-29",category:"生活",repeatCycle:"每年",note:"农历二月十一"},
+    {title:"HuaGary生日",date:"2026-05-15",category:"生活",repeatCycle:"每年",note:"公历5月15日"},
+    {title:"BOBO生日",date:"2026-05-31",category:"生活",repeatCycle:"每年",note:"农历四月十五"},
+    {title:"MM生日",date:"2026-08-11",category:"家庭",repeatCycle:"每年",note:"农历六月廿九"},
+    {title:"刘玉琴生日",date:"2026-12-06",category:"生活",repeatCycle:"每年",note:"农历十月廿八"},
+    {title:"李莎妮生日",date:"2026-12-09",category:"生活",repeatCycle:"每年",note:"农历冬月初一"},
+    {title:"华生日",date:"2026-12-20",category:"家庭",repeatCycle:"每年",note:"农历冬月十二"},
+    {title:"DD生日",date:"2027-01-10",category:"家庭",repeatCycle:"每年",note:"农历腊月初三"},
+    {title:"F生日",date:"2027-01-11",category:"家庭",repeatCycle:"每年",note:"农历腊月初四"}
   ];
   presetDays.forEach(d=>{
-    // 每个重要日子设置3个提醒：提前7天、提前3天、当天
-    DB.addDay(Object.assign({},d,{reminderOffset:'oneWeekBefore'}));
-    // 额外添加提前3天和当天的通知
-    const id3=Date.now()+'_3d_'+Math.random().toString(36).slice(2);
-    const id0=Date.now()+'_0d_'+Math.random().toString(36).slice(2);
-    const date=new Date(d.date+'T09:00:00');
-    if('Notification'in window&&Notification.permission==='granted'){
-      const d3=new Date(date);d3.setDate(d3.getDate()-3);
-      const delay3=d3.getTime()-Date.now();
-      if(delay3>0)setTimeout(()=>{new Notification('📌 '+d.title+' 还有3天',{body:d.category+(d.note?' · '+d.note:'')})},delay3);
-      const delay0=date.getTime()-Date.now();
-      if(delay0>0)setTimeout(()=>{new Notification('🎉 今天是'+d.title+'！',{body:d.category+(d.note?' · '+d.note:'')})},delay0);
-    }
+    // 每个生日设置3次提醒：提前7天、提前3天、当天
+    ['oneWeekBefore','threeDaysBefore','onDay'].forEach(offset=>{
+      const item=Object.assign({},d,{reminderOffset:offset});
+      if(offset==='oneWeekBefore') DB.addDay(item); // 只存一条记录
+      // 设置通知
+      const date=new Date(d.date+'T09:00:00');
+      const offsets={oneWeekBefore:7,threeDaysBefore:3,onDay:0};
+      const notifDate=new Date(date);notifDate.setDate(notifDate.getDate()-offsets[offset]);
+      const delay=notifDate.getTime()-Date.now();
+      if(delay>0&&'Notification'in window&&Notification.permission==='granted'){
+        const msgs={oneWeekBefore:'还有7天',threeDaysBefore:'还有3天',onDay:'就是今天！🎉'};
+        setTimeout(()=>{new Notification('🎂 '+d.title+' '+msgs[offset],{body:d.note||d.category})},delay);
+      }
+    });
   });
-  localStorage.setItem('_presetLoaded_v2','1');
+  localStorage.setItem('_presetLoaded_v3','1');
 })();
 
 // ─── 初始化 ───
